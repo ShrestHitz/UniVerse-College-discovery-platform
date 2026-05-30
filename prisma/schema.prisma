@@ -1,0 +1,177 @@
+// UniVerse — College Discovery Platform
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+model College {
+  id              Int          @id @default(autoincrement())
+  name            String
+  location        String
+  state           String
+  type            String       // "private" | "government"
+  fees            Int
+  rating          Float
+  overview        String       @db.Text
+  establishedYear Int
+  nirfRanking     Int?
+  website         String?
+  images          String[]     // array of image URLs
+
+  courses         Course[]
+  placements      Placement[]
+  reviews         Review[]
+  savedBy         SavedCollege[]
+  cutoffs         Cutoff[]
+  comparisons     ComparisonItem[]
+
+  createdAt       DateTime     @default(now())
+}
+
+model Course {
+  id          Int      @id @default(autoincrement())
+  collegeId   Int
+  name        String
+  duration    String
+  fees        Int
+  eligibility String
+  seats       Int
+
+  college     College  @relation(fields: [collegeId], references: [id])
+  cutoffs     Cutoff[]
+}
+
+model Placement {
+  id                   Int      @id @default(autoincrement())
+  collegeId            Int      @unique
+  averagePackage       Float
+  highestPackage       Float
+  placementPercentage  Float
+  topRecruiters        String[]
+
+  college              College  @relation(fields: [collegeId], references: [id])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  collegeId Int
+  userId    Int
+  rating    Float
+  title     String
+  comment   String   @db.Text
+  createdAt DateTime @default(now())
+
+  college   College  @relation(fields: [collegeId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id                Int                @id @default(autoincrement())
+  name              String
+  email             String             @unique
+  password          String
+  createdAt         DateTime           @default(now())
+
+  reviews           Review[]
+  savedColleges     SavedCollege[]
+  comparisons       Comparison[]
+  predictorSessions PredictorSession[]
+  questions         Question[]
+  answers           Answer[]
+}
+
+model SavedCollege {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  collegeId Int
+
+  user      User    @relation(fields: [userId], references: [id])
+  college   College @relation(fields: [collegeId], references: [id])
+
+  @@unique([userId, collegeId])
+}
+
+model Comparison {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id])
+  colleges  ComparisonItem[]
+}
+
+model ComparisonItem {
+  id           Int        @id @default(autoincrement())
+  comparisonId Int
+  collegeId    Int
+
+  comparison   Comparison @relation(fields: [comparisonId], references: [id])
+  college      College    @relation(fields: [collegeId], references: [id])
+}
+
+model Exam {
+  id             Int       @id @default(autoincrement())
+  name           String
+  conductingBody String
+  examDate       DateTime?
+  eligibility    String
+  syllabus       String    @db.Text
+
+  cutoffs        Cutoff[]
+}
+
+model Cutoff {
+  id          Int     @id @default(autoincrement())
+  collegeId   Int
+  courseId    Int
+  examId      Int
+  category    String  // "General" | "OBC" | "SC" | "ST"
+  openingRank Int
+  closingRank Int
+  year        Int
+
+  college     College @relation(fields: [collegeId], references: [id])
+  course      Course  @relation(fields: [courseId], references: [id])
+  exam        Exam    @relation(fields: [examId], references: [id])
+}
+
+model PredictorSession {
+  id                  Int      @id @default(autoincrement())
+  userId              Int?
+  exam                String
+  rank                Int
+  category            String
+  recommendedColleges Json
+  createdAt           DateTime @default(now())
+
+  user                User?    @relation(fields: [userId], references: [id])
+}
+
+model Question {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  title       String
+  description String   @db.Text
+  tags        String[]
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  answers     Answer[]
+}
+
+model Answer {
+  id         Int      @id @default(autoincrement())
+  questionId Int
+  userId     Int
+  answer     String   @db.Text
+  createdAt  DateTime @default(now())
+
+  question   Question @relation(fields: [questionId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+}
