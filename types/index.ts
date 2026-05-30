@@ -8,11 +8,14 @@ export interface CollegeCard {
   rating: number;
   nirfRanking: number | null;
   images: string[];
-  placements: {
-    averagePackage: number;
-    highestPackage: number;
-    placementPercentage: number;
-  } | null;
+placements: {
+  id?: number;
+  collegeId?: number;
+  averagePackage: number;
+  highestPackage: number;
+  placementPercentage: number;
+  topRecruiters?: string[];
+}[] | null;
   _count?: { reviews: number };
 }
 
